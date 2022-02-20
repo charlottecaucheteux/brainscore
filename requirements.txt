@@ -1,0 +1,11 @@
+# pip3 install torch==1.10.0 torchvision torchaudio scikit-learn transformers==4.15.0
+torch == 1.10
+transformers == 4.15
+scikit-learn == 0.24.1
+mne == 0.22.0 
+matplotlib
+nibabel == 3.2.1
+pandas
+submitit
+natsort
+tqdm
