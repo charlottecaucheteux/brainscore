@@ -6,30 +6,29 @@ from pathlib import Path
 fmriprep_dir = Path("/datasets01/hasson_narratives") / \
     "derivatives" / "fmriprep"
 
-base_dir = Path("/checkpoint/ccaucheteux/narratives")
+# base_dir = Path("/checkpoint/ccaucheteux/narratives")
+base_dir = Path("/datasets01/hasson_narratives")
 deriv_dir = base_dir / "derivatives"
 afni_dir = base_dir / "derivatives" / "afni-smooth"
 afni_dir_nosmooth = base_dir / "derivatives" / "afni-nosmooth"
 
-
 event_meta_path = base_dir / "code" / "event_meta.json"
 task_meta_path = base_dir / "code" / "task_meta.json"
 scan_exclude_path = base_dir / "code" / "scan_exclude.json"
-checked_gentle_path = base_dir / "stimuli" / "gentle_checked"
-gentle_path = base_dir / "stimuli" / "gentle"
-probe_path = Path("/private/home/ccaucheteux/structural-probes")
-pos_equiv_file = (
-    "/private/home/ccaucheteux/drafts/data/english_equivalence_pos_test.npy"
-)
-posdep_equiv_file = (
-    "/private/home/ccaucheteux/drafts/data/english_equivalence_pos_dep_1M.npy"
-)
-wiki_dir = Path("/checkpoint/ccaucheteux/train-xlm-models/XLM/data/wiki/txt/")
-wiki_100m_path = wiki_dir / "en.100m"
-wiki_20m_path = wiki_dir / "en.20m"
-wiki_20m_splits = [wiki_dir / f"en.5m.{i}" for i in [1, 2, 3, 4]]
-wiki_20m_1_path = wiki_dir / "en.20m.1"
-wiki_20m_2_path = wiki_dir / "en.20m.2"
+
+# probe_path = Path("/private/home/ccaucheteux/structural-probes")
+# pos_equiv_file = (
+#     "/private/home/ccaucheteux/drafts/data/english_equivalence_pos_test.npy"
+# )
+# posdep_equiv_file = (
+#     "/private/home/ccaucheteux/drafts/data/english_equivalence_pos_dep_1M.npy"
+# )
+# wiki_dir = Path("/checkpoint/ccaucheteux/train-xlm-models/XLM/data/wiki/txt/")
+# wiki_100m_path = wiki_dir / "en.100m"
+# wiki_20m_path = wiki_dir / "en.20m"
+# wiki_20m_splits = [wiki_dir / f"en.5m.{i}" for i in [1, 2, 3, 4]]
+# wiki_20m_1_path = wiki_dir / "en.20m.1"
+# wiki_20m_2_path = wiki_dir / "en.20m.2"
 
 # Brain map
 surf_dir = base_dir / "derivatives/freesurfer/fsaverage6/surf/"
@@ -39,7 +38,11 @@ inf_left = str(surf_dir / "lh.inflated")
 inf_right = str(surf_dir / "rh.inflated")
 
 # Repo
-root = Path("/private/home/ccaucheteux/hasson-syntaxe-vs-semantics")
+root = Path("")
+
+# Checks and stimulus
+gentle_path = root / "stimuli" / "gentle"
+checked_gentle_path = root / "stimuli" / "gentle_checked"
 
 # Data to generate
 data = root / "data"
@@ -73,7 +76,7 @@ dict_bolds = data / "bold" / "dict_tasks"
 scores = root / "scores"
 
 # Wiki syntactic embeddings (no brain)
-wiki_bar_embeddings = data / "wiki_bar_embeddings"
-wiki_gpt2_embeddings = data / "wiki_gpt2_embeddings"
-wiki_gpt2_pca = data / "wiki_gpt2_pca"
-wiki_gpt2_pca_folder_name = "0727"  # "0706"
+# wiki_bar_embeddings = data / "wiki_bar_embeddings"
+# wiki_gpt2_embeddings = data / "wiki_gpt2_embeddings"
+# wiki_gpt2_pca = data / "wiki_gpt2_pca"
+# wiki_gpt2_pca_folder_name = "0727"  # "0706"

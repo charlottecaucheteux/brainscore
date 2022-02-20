@@ -149,50 +149,53 @@ def get_checked_tasks():
     """
     Tasks checked by hand - report onset of the paper.
     """
-    tasks = [
-        p.parent.name for p in list(Path(paths.checked_gentle_path).glob("*/align.csv"))
-    ]
-    tasks = {k: {} for k in tasks}
+    if paths.checked_gentle_path.exists():
+        tasks = [
+            p.parent.name for p in list(Path(paths.checked_gentle_path).glob("*/align.csv"))
+        ]
+        tasks = {k: {} for k in tasks}
 
-    for key in tasks.keys():
-        if key in [
+        for key in tasks.keys():
+            if key in [
+                "milkywayoriginal",
+                "milkywaysynonyms",
+                "milkywayvodka",
+            ]:
+                tasks[key]["bold_task"] = "milkyway"
+            else:
+                tasks[key]["bold_task"] = key
+
+        # Set onsets for some tasks
+        for key in [
+            "21styear",
             "milkywayoriginal",
             "milkywaysynonyms",
             "milkywayvodka",
+            "prettymouth",
+            "pieman",
         ]:
-            tasks[key]["bold_task"] = "milkyway"
-        else:
-            tasks[key]["bold_task"] = key
+            tasks[key]["onset"] = 0
+        for key in ["piemanpni", "bronx", "black", "forgot"]:
+            tasks[key]["onset"] = 8
+        for key in [
+            "slumlordreach",
+            "shapessocial",
+            "shapesphysical",
+            "sherlock",
+            "merlin",
+            "notthefallintact",
+        ]:
+            tasks[key]["onset"] = 3
+        for key in ["lucy"]:
+            tasks[key]["onset"] = 1  # not aligned with text
+        for key in ["tunnel"]:
+            tasks[key]["onset"] = 2
 
-    # Set onsets for some tasks
-    for key in [
-        "21styear",
-        "milkywayoriginal",
-        "milkywaysynonyms",
-        "milkywayvodka",
-        "prettymouth",
-        "pieman",
-    ]:
-        tasks[key]["onset"] = 0
-    for key in ["piemanpni", "bronx", "black", "forgot"]:
-        tasks[key]["onset"] = 8
-    for key in [
-        "slumlordreach",
-        "shapessocial",
-        "shapesphysical",
-        "sherlock",
-        "merlin",
-        "notthefallintact",
-    ]:
-        tasks[key]["onset"] = 3
-    for key in ["lucy"]:
-        tasks[key]["onset"] = 1  # not aligned with text
-    for key in ["tunnel"]:
-        tasks[key]["onset"] = 2
-
-    checked_tasks = {k: v for k, v in tasks.items() if "onset" in v}
-    checked_tasks = pd.DataFrame(checked_tasks).T.reset_index()
-    checked_tasks = checked_tasks.rename(columns={"index": "audio_task"})
+        checked_tasks = {k: v for k, v in tasks.items() if "onset" in v}
+        checked_tasks = pd.DataFrame(checked_tasks).T.reset_index()
+        checked_tasks = checked_tasks.rename(columns={"index": "audio_task"})
+    else:
+        create_checked_stimuli()
     return checked_tasks
 
 
@@ -200,21 +203,19 @@ def create_checked_stimuli():
     """Save to a new directory checked stimuli"""
     tasks_with_issues = ["notthefallintact", "prettymouth", "merlin"]
     new_starts = [[25.8], [21], [29, 29.15]]
-    # new_gentle = Path(str(paths.init_gentle_path) + "_checked")
-    new_gentle = paths.checked_gentle_path
     tasks = [p.parent.name for p in list(
         Path(paths.gentle_path).glob("*/align.csv"))]
     for task in tasks:
         print(task)
         df = pd.read_csv(paths.gentle_path / task / "align.csv", header=None)
-        Path(new_gentle / task).mkdir(exist_ok=True)
-        df.to_csv(new_gentle / task / "align.csv", header=None, index=False)
+        (paths.checked_gentle_path / task).mkdir(exist_ok=True)
+        df.to_csv(paths.checked_gentle_path / task / "align.csv", header=None, index=False)
     for task, new_vals in zip(tasks_with_issues, new_starts):
         df = pd.read_csv(paths.gentle_path / task / "align.csv", header=None)
         for i, val in enumerate(new_vals):
             df.iloc[i, 2] = val
             df.iloc[i, 3] = val + 0.05
-        df.to_csv(new_gentle / task / "align.csv", header=None, index=False)
+        df.to_csv(paths.checked_gentle_path / task / "align.csv", header=None, index=False)
 
 
 # add their own script to path for simplicity

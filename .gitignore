@@ -1,0 +1,11 @@
+tmp/
+.vscode
+.mypy_cache
+__pycache__
+notebooks
+submitit_jobs
+test*
+.DStore
+build
+dist
+*.egg-info
