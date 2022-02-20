@@ -41,7 +41,7 @@ inf_right = str(surf_dir / "rh.inflated")
 root = Path("")
 
 # Checks and stimulus
-gentle_path = root / "stimuli" / "gentle"
+gentle_path = base_dir / "stimuli" / "gentle"
 checked_gentle_path = root / "stimuli" / "gentle_checked"
 
 # Data to generate
