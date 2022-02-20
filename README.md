@@ -14,7 +14,7 @@ pip install -e
 ```
 from brainscore import run_eval
 model_name_or_path = "gpt2" # Huggingface model 
-n_subjects = 2
+local = True # If False, run on the cluster with submitit
 run_eval(model_name_or_path, average_bold=True)
 ```
 
@@ -24,5 +24,6 @@ run_eval(model_name_or_path, average_bold=True)
 from brainscore import run_eval
 model_name_or_path = "gpt2" # Huggingface model 
 n_subjects = 2
+local = True # If False, run on the cluster with submitit
 run_eval(model_name_or_path, n_subjects=n_subjects, average_bold=False)
 ```

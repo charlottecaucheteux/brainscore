@@ -42,11 +42,12 @@ def _wait_until_complete(jobs, max_time_to_wait=50, wait_step=10*60, job_names=N
 def _job_compute_activations(model_file, task, output_file, max_len=1024):
     # With time window
     print(f"Computing the activations of {model_file} for task {task}")
+    use_cuda = torch.cuda.is_available()
     stimulus = get_stimulus(task, lower=False)
     activations = get_activations(stimulus,
                                   model_name_or_path=model_file,
                                   max_len=max_len,
-                                  device="cuda")
+                                  device="cuda" if use_cuda else "cpu")
     print(f"Savving activations of shape {activations.shape} to {output_file}")
     torch.save(activations, output_file)
     return True
