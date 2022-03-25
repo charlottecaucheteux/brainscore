@@ -1,3 +1,6 @@
+"""
+Get activations form Wav2Vec model (huggingface)
+"""
 import logging
 from pathlib import Path
 
@@ -280,14 +283,11 @@ def get_speech_activations(
 if __name__ == "__main__":
     task = "pieman"
     wav_file = f"/datasets01/hasson_narratives/{task}_audio.wav"
-    model_name_or_path = (
-        Path("models") / "fairseq" / "fairseq_models_juliette" /
-        "random_model.pt")
     for supervised in [True, False]:
         for feature_type in ["tr", "conv"]:
             res, _ = get_speech_activations(
                 wav_file,
-                model_name_or_path=model_name_or_path,
+                model_name_or_path="facebook/wav2vec2-base-960h",
                 feature_type=feature_type,
                 fairseq=True,
                 supervised=supervised,

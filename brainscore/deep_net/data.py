@@ -1,4 +1,6 @@
-"""TODO"""
+"""
+Get activations form NLP model (huggingface, e.g. gpt2)
+"""
 import logging
 
 import numpy as np
