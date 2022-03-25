@@ -17,7 +17,6 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
                                     scale="minmax",
                                     pretrained=True,
                                     model_name="wav2vec2-base-960h",
-                                    device="cpu",
                                     ):
     # With time window
     print(f"Computing the activations of Wav2Vec to {output_file}")
@@ -30,7 +29,7 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
         feature_type=feature_type,
         window=window,
         context=context,
-        device=device,  # "cuda" if use_cuda else "cpu",
+        device="cpu",
         TR=1.5,
         extra_scans=10,
         hrf_model="glover",
@@ -96,11 +95,10 @@ if __name__=="__main__":
         embed_files[task] = embed_file
 
     # ------ Compute brain scores for average subject (left hemi) ----
-    assert Path(str(paths.mean_bold) % "L").is_file(), "Please update paths.mean_bold in brainscore/paths.py"
+    assert Path(str(paths.mean_bolds) % "L").is_file(), "Please update paths.mean_bold in brainscore/paths.py"
     output_file = paths.scores / "minimal" / "avg_L.npy"
-    score = _job_compute_speech_brain_score(feature_files, output_file,
+    score = _job_compute_speech_brain_score(embed_files, output_file,
         subject="avg",
+        layers=(0, 8),
+        to_rois=True,
         select_tasks=["pieman"])
-
-    
-
