@@ -11,5 +11,6 @@ nibabel == 3.2.1
 pandas
 submitit
 natsort
+nistats
 tqdm
 soundfile
