@@ -40,7 +40,7 @@ inf_right = str(surf_dir / "rh.inflated")
 # Repo
 root = Path("")
 
-# Checks and stimulus
+stimuli = base_dir / "stimuli"
 gentle_path = base_dir / "stimuli" / "gentle"
 checked_gentle_path = root / "stimuli" / "gentle_checked"
 
@@ -65,6 +65,7 @@ syn_equiv_file = str(
     / "equival_story.npy"
 )
 embeddings = data / "embeddings"
+speech_embeddings = data / "speech_embeddings"
 mean_bolds = data / "bold" / "mean_bolds_concat_tasks_%s.npy"
 mean_bolds_rois = data / "bold" / "mean_bolds_concat_tasks_rois_%s.npy"
 mean_bolds_mapping_rois = data / "bold" / "rois_%s.npy"
@@ -80,3 +81,6 @@ scores = root / "scores"
 # wiki_gpt2_embeddings = data / "wiki_gpt2_embeddings"
 # wiki_gpt2_pca = data / "wiki_gpt2_pca"
 # wiki_gpt2_pca_folder_name = "0727"  # "0706"
+
+
+fairseq_models = root / "models" / "fairseq" / "fairseq_models_juliette"

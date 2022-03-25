@@ -85,7 +85,8 @@ def get_rois(hemi="lh", max_vox=None):
              for i in rois.keys()]  # if "Networks" in i]
     areas = np.unique(areas)
 
-    mapping_rois = {k: rois[f"{area}-{hemi}"] for (k, area) in enumerate(areas)}
+    mapping_rois = {k: rois[f"{area}-{hemi}"]
+                    for (k, area) in enumerate(areas)}
     return areas, rois, mapping_rois, rois_colors
 
 
@@ -93,7 +94,7 @@ def to_rois(x, mapping_rois):
     y = np.zeros((*x.shape[:-1], len(mapping_rois)))
     for j, vert in mapping_rois.items():
         if len(vert):
-            y[..., j] = x[..., vert].mean(-1)
+            y[..., j] = np.nanmean(x[..., vert], -1)
     return y
 
 

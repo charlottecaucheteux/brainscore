@@ -3,6 +3,10 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def sum_between_tr(feature, word_events, n_TR=None, TR=1.5, merge_func="sum"):
+    """
+    feature of shape [n_words, dim]
+    n_TR < n_words
+    """
     word_events["onset"] = word_events["onset"].interpolate()
     word_events["TR"] = (word_events["onset"] // TR).astype(int) + 1
     word_events["word_index"] = np.arange(len(word_events))
