@@ -1,7 +1,7 @@
 # python 3.7
 # pip3 install torch==1.10.0 torchvision torchaudio scikit-learn transformers==4.15.0
 torch == 1.10
-transformers == 4.15
+transformers == 4.15 Only for pretrained wav2vec from hugg
 scikit-learn == 0.24.1
 mne == 0.22.0 
 matplotlib
