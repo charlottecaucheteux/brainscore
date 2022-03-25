@@ -9,7 +9,6 @@ test*
 build
 dist
 *.egg-info
-stimuli
 notebooks
 models
 scores
