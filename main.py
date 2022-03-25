@@ -1,3 +1,8 @@
+from pathlib import Path
+
+import numpy as np
+import torch
+
 from brainscore import paths
 from brainscore.brain.data import get_task_df
 from brainscore.deep_net.data_speech import get_speech_activations
@@ -12,6 +17,7 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
                                     scale="minmax",
                                     pretrained=True,
                                     model_name="wav2vec2-base-960h",
+                                    device="cpu",
                                     ):
     # With time window
     print(f"Computing the activations of Wav2Vec to {output_file}")
@@ -24,7 +30,7 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
         feature_type=feature_type,
         window=window,
         context=context,
-        device=DEVICE,  # "cuda" if use_cuda else "cpu",
+        device=device,  # "cuda" if use_cuda else "cpu",
         TR=1.5,
         extra_scans=10,
         hrf_model="glover",
