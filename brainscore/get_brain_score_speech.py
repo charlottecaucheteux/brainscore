@@ -48,6 +48,7 @@ def get_brain_score_speech(
     concat_layers=False,
     concat_conv_trick=False,
     hierarch_concat=False,
+    select_tasks=None,
 ):
     corr_function = get_metric(metric)
 
@@ -56,7 +57,10 @@ def get_brain_score_speech(
         print("Using average subject")
         print("Loading BOLD ...")
         mean_bold = get_mean_bold(hemi=hemi)
-        params = list(mean_bold.keys())
+        if select_tasks is not None:
+            params = select_tasks.copy()
+        else:
+            params = list(mean_bold.keys())
         print("Done")
     else:
         singlesub = True
