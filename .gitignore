@@ -9,3 +9,12 @@ test*
 build
 dist
 *.egg-info
+stimuli
+notebooks
+models
+scores
+outputs
+peech_features.py
+main.py
+rename_files.py
+get_fairseq_models.py
