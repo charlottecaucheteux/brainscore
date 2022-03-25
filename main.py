@@ -1,6 +1,7 @@
 from brainscore import paths
 from brainscore.brain.data import get_task_df
 from brainscore.deep_net.data_speech import get_speech_activations
+from brainscore.get_brain_score_speech import get_brain_score_speech
 
 SELECT_TASKS = ["pieman"]
 
