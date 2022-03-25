@@ -4,6 +4,7 @@ Get brain data
 
 
 import json
+import logging
 import os
 import re
 from glob import glob
@@ -18,6 +19,8 @@ from tqdm import tqdm
 
 from .. import constants, paths
 from .exclude_scans import exclude_scan
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset:
@@ -196,26 +199,32 @@ def get_checked_tasks():
         checked_tasks = checked_tasks.rename(columns={"index": "audio_task"})
     else:
         create_checked_stimuli()
+        checked_tasks = get_checked_tasks()
     return checked_tasks
 
 
 def create_checked_stimuli():
     """Save to a new directory checked stimuli"""
+    logger.info(f"Creating new checked stimuli in {paths.checked_gentle_path}")
     tasks_with_issues = ["notthefallintact", "prettymouth", "merlin"]
     new_starts = [[25.8], [21], [29, 29.15]]
     tasks = [p.parent.name for p in list(
         Path(paths.gentle_path).glob("*/align.csv"))]
     for task in tasks:
-        print(task)
+        save_folder = paths.checked_gentle_path / task
+        save_folder.mkdir(exist_ok=True, parents=True)
         df = pd.read_csv(paths.gentle_path / task / "align.csv", header=None)
         (paths.checked_gentle_path / task).mkdir(exist_ok=True)
-        df.to_csv(paths.checked_gentle_path / task / "align.csv", header=None, index=False)
+        df.to_csv(paths.checked_gentle_path / task /
+                  "align.csv", header=None, index=False)
     for task, new_vals in zip(tasks_with_issues, new_starts):
         df = pd.read_csv(paths.gentle_path / task / "align.csv", header=None)
         for i, val in enumerate(new_vals):
             df.iloc[i, 2] = val
             df.iloc[i, 3] = val + 0.05
-        df.to_csv(paths.checked_gentle_path / task / "align.csv", header=None, index=False)
+        df.to_csv(paths.checked_gentle_path / task /
+                  "align.csv", header=None, index=False)
+    return True
 
 
 # add their own script to path for simplicity
@@ -446,7 +455,8 @@ def get_phone_dic(overwrite=False, kind="phones"):
     if f.is_file() and not overwrite:
         return np.load(f, allow_pickle=True).item()
 
-    tasks = [p.parent.name for p in list(paths.gentle_path.glob("*/align.csv"))]
+    tasks = [p.parent.name for p in list(
+        paths.gentle_path.glob("*/align.csv"))]
     phones = []
     for task in tasks:
         stimuli = get_stimulus(task, add_phones=True)

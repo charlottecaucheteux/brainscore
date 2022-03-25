@@ -78,8 +78,8 @@ def mapping(
             R[:, :, i] = pipe["ridge"].coef_
         else:
             R[:, i] = corr_function(Y[test], Y_pred)
-
-    print("")
+    
     if average_folds:
         R = np.nanmean(R, -1)
+        
     return R

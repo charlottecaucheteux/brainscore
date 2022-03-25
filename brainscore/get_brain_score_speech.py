@@ -1,6 +1,7 @@
 """From a model_name or path to its brain score"""
 
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -15,8 +16,10 @@ from .brain.to_rois import bold_to_rois
 from .mapping import mapping
 from .metrics import get_metric
 
+logger = logging.getLogger(__name__)
 
-def get_brain_score(
+
+def get_brain_score_speech(
     feature_files,
     subject="avg",
     layers=None,
@@ -29,7 +32,6 @@ def get_brain_score(
     hemi="L",
     space="fsaverage6",
     TR=1.5,
-    trim_init=2,
     y_pca=0,
     # FIR
     n_delays=5,
@@ -42,6 +44,10 @@ def get_brain_score(
     # Output
     metric="correlate",
     average_folds=True,
+    audio=True,
+    concat_layers=False,
+    concat_conv_trick=False,
+    hierarch_concat=False,
 ):
     corr_function = get_metric(metric)
 
@@ -63,6 +69,7 @@ def get_brain_score(
     # ---------- Build features (X) and brain (Y) ----------
     features = []
     Y = []
+    padding = None
     for params_ in params:
 
         # try:
@@ -91,23 +98,52 @@ def get_brain_score(
         # Load stimulus
         stimuli = get_stimulus(task)
 
-        # Update
-        Y.append(subj_data.copy())
-
         # Extract features from stimulus
         f = Path(feature_files[task])
         assert f.is_file(), f"{f} does not exists"
         feat = torch.load(f).numpy()
+        n_scans = min(len(subj_data), feat.shape[1])
+        if concat_conv_trick:
+            assert audio
+            assert concat_layers
+            print("WARNING CONCAT TRICK WITH CONV !!!!!!")
+            f_conv = str(f).replace("_tr_minmax.pth", "_conv_minmax.pth")
+            feat_conv = torch.load(f_conv).numpy()
+            feat = list(feat_conv) + list(feat)
         if layers is None:
             layers = np.arange(len(feat))
-        fir_feat = np.zeros((len(layers), len(subj_data), feat.shape[-1]))
-        for k, layer in enumerate(layers):
-            fir_feat[k] = sum_between_tr(
-                feat[layer], stimuli,
-                n_TR=len(subj_data),
-                TR=TR,
-                merge_func="sum")
+        if audio:  # HRF already precomputed
+            fir_feat = [feat[k][:n_scans] for k in layers]
+            subj_data = subj_data[:n_scans]
+        else:
+            fir_feat = np.zeros(
+                (len(layers), len(subj_data), feat.shape[-1]))
+            for k, layer in enumerate(layers):
+                fir_feat[k] = sum_between_tr(
+                    feat[layer], stimuli,
+                    n_TR=len(subj_data),
+                    TR=TR,
+                    merge_func="sum")
+        if hierarch_concat:
+            assert concat_layers
+            logger.info("Concatenating layers")
+            concat_fir_feat = np.concatenate(list(fir_feat), axis=-1)
+            padding = np.zeros((len(fir_feat), concat_fir_feat.shape[-1]))
+            current = 0
+            for k, feat in enumerate(list(fir_feat)):
+                padding[k, :(current+feat.shape[1])] = 1
+                current += feat.shape[1]
+                print(f"layer {k}, {current}")
+            fir_feat = np.stack([concat_fir_feat]*len(fir_feat))
+            logger.info(f"to {fir_feat.shape} and padding: {padding.shape}")
+        elif concat_layers:
+            logger.info("Concatenating layers")
+            fir_feat = np.concatenate(list(fir_feat), axis=-1)[None]
+            logger.info(f"to {fir_feat.shape}")
         features.append(fir_feat)
+
+        # Update
+        Y.append(subj_data.copy())
         # except Exception as e:
         #     print(f"ERROR for task {params_}, {e}")
 
@@ -126,9 +162,14 @@ def get_brain_score(
 
     # Brain mapping
     brain_scores = []
-    for k, X in enumerate(list(features)):
+    for k, X in enumerate(features):
 
         print(f"Running for layer {layers[k]}")
+
+        if padding is not None:
+            X = X[:, np.where(padding[k])[0]]
+
+        print(f"X.shape {X.shape}")
 
         r = np.zeros((Y.shape[1], n_folds))
         valid = Y.std(0) > 0
@@ -147,6 +188,7 @@ def get_brain_score(
             average_folds=False,
             y_pca=y_pca,
             n_delays=n_delays,
+            apply_fir=not audio,
             n_delays_start=n_delays_start,
             x_pca=x_pca,
             return_coef=False,
