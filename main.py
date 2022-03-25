@@ -5,7 +5,7 @@ if __name__ == "__main__":
              "test_gpt2_brain_score",
              layers=[8],
              average_bold=False,
-             n_subjects=10,
+             n_subjects=2,
              hemis=["L"],
              to_rois=True,
              x_pca=20,

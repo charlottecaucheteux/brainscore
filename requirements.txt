@@ -1,3 +1,4 @@
+# python 3.7
 # pip3 install torch==1.10.0 torchvision torchaudio scikit-learn transformers==4.15.0
 torch == 1.10
 transformers == 4.15
@@ -9,3 +10,5 @@ pandas
 submitit
 natsort
 tqdm
+soundfile
+# fairseq # For Juliette project only

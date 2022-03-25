@@ -1,5 +1,3 @@
-
-import shutil
 import time
 from pathlib import Path
 
@@ -8,12 +6,14 @@ import pandas as pd
 import torch
 from submitit import AutoExecutor
 
-from .brain.data import get_stimulus, get_task_df
-from .deep_net.data import get_activations
-from .get_brain_score import get_brain_score
+from . import paths
+from .brain.data import get_task_df
+from .deep_net.data_speech import get_speech_activations
+from .get_brain_score_speech import get_brain_score_speech
 
 
-def _wait_until_complete(jobs, max_time_to_wait=50, wait_step=10*60, job_names=None):
+def _wait_until_complete(
+        jobs, max_time_to_wait=50, wait_step=10 * 60, job_names=None):
     if job_names is None:
         job_names = [j.job_id for j in jobs]
     time_counter = 0
@@ -39,25 +39,37 @@ def _wait_until_complete(jobs, max_time_to_wait=50, wait_step=10*60, job_names=N
 # Compute embeddings
 
 
-def _job_compute_activations(model_file, task, output_file, max_len=1024):
+def _job_compute_speech_activations(task, feature_type, output_file,
+                                    hrf_model="glover",
+                                    window=15,
+                                    context=60):
     # With time window
-    print(f"Computing the activations of {model_file} for task {task}")
-    use_cuda = torch.cuda.is_available()
-    stimulus = get_stimulus(task, lower=False)
-    activations = get_activations(stimulus,
-                                  model_name_or_path=model_file,
-                                  max_len=max_len,
-                                  device="cuda" if use_cuda else "cpu")
-    print(f"Savving activations of shape {activations.shape} to {output_file}")
+    print("Computing the activations of Wav2Vec")
+    wav_file = paths.stimuli / f"{task}_audio.wav"
+    assert wav_file.is_file(), f"{wav_file} does not exist !!"
+    activations, _ = get_speech_activations(
+        wav_file,
+        model_name_or_path="facebook/wav2vec2-base-960h",
+        feature_type=feature_type,
+        window=window,
+        context=context,
+        device="cpu",  # "cuda" if use_cuda else "cpu",
+        TR=1.5,
+        extra_scans=10,
+        hrf_model="glover",
+        flatten_hrf_cond=True,
+    )
+    print(f"Saving activations of shape {activations.shape} to {output_file}")
     torch.save(activations, output_file)
     return True
 
 
 # STOP HERE UNTIL FINISH
-def _job_compute_brain_score(subject, feature_files, output_file,
-                             layers=[8], to_rois=True, x_pca=0):
-    score = get_brain_score(
+def _job_compute_speech_brain_score(subject, feature_files, output_file,
+                                    layers=None, to_rois=True, x_pca=0):
+    score = get_brain_score_speech(
         feature_files,
+        audio=True,
         subject=subject,
         layers=layers,
         # X
@@ -67,7 +79,6 @@ def _job_compute_brain_score(subject, feature_files, output_file,
         hemi="L",
         space="fsaverage6",
         TR=1.5,
-        trim_init=2,
         y_pca=0,
         # FIR
         n_delays=5,
@@ -87,28 +98,23 @@ def _job_compute_brain_score(subject, feature_files, output_file,
     return np.nanmean(score)
 
 
-def run_eval(model_name_or_path,
-             output_path,
-             layers=[8],
-             average_bold=False,
-             n_subjects=10,
-             hemis=["L"],
-             to_rois=True,
-             x_pca=False,
-             cache_path="/checkpoint/ccaucheteux/cache",
-             delete_cache_after_run=True,
-             slurm_partition="learnfair",
-             local=False,
-             model_max_len=128,
-             overwrite=False,
-             ):
-
-    # cache_path.rmdir()
-    # i = 1
-    # while cache_path.exists():
-    #     cache_path = Path(str(cache_path) + f"-{i}")
-    #     i += 1
-    # print(f"Saving to {cache_path}")
+def run_eval_speech(output_path,
+                    model_name="wav2vec2",
+                    feature_type="conv",
+                    layers=None,
+                    average_bold=False,
+                    hrf_model="glover",
+                    n_subjects=10,
+                    hemis=["L"],
+                    to_rois=True,
+                    x_pca=False,
+                    cache_path="/checkpoint/ccaucheteux/cache",
+                    delete_cache_after_run=True,
+                    slurm_partition="learnfair",
+                    local=False,
+                    overwrite=False,
+                    overwrite_feat=False,
+                    ):
 
     if average_bold:
         print("Average subject")
@@ -119,53 +125,70 @@ def run_eval(model_name_or_path,
         subjects = get_task_df().subject.unique()[:n_subjects]
         tasks = get_task_df().query("subject in @subjects").audio_task.unique()
 
-    # Deep nets' activations
-    name = Path(model_name_or_path).name
-    feature_dir = Path(cache_path) / "embeddings" / name
+    # --------- Deep nets' activations ---------
+    feature_dir = Path(cache_path) / "embeddings" / \
+        model_name / hrf_model / feature_type
     print(f"Computing deep networks activations to {feature_dir}")
     feature_dir.mkdir(exist_ok=True, parents=True)
 
-    feature_files = {}
-    to_run_files = []
-    to_run_tasks = []
+    params = []
     for task in tasks:
         feature_file = feature_dir / f"{task}.pth"
-        if not feature_file.is_file():
-            to_run_files.append(str(feature_file))
-            to_run_tasks.append(task)
-        feature_files[task] = str(feature_file)
+        params.append(
+            dict(
+                task=task,
+                feature_type=feature_type,
+                output_file=str(feature_file),
+                hrf_model=hrf_model,
+                window=15,
+                context=60,
+                to_run=overwrite_feat or (not feature_file.is_file()),
+            )
+        )
+    df = pd.DataFrame(params)
+    df.to_csv(feature_dir / "params.csv")
+    feature_files = {k: of for (k, of) in zip(
+        df["task"], df["output_file"])}
+
+    df_to_run = df.query("to_run")
 
     if local:
-        for run_task, run_file in zip(to_run_tasks, to_run_files):
-            _job_compute_activations(
-                model_name_or_path, run_task, run_file, max_len=model_max_len)
-    else:
+        for params_ in params:
+            if params_["to_run"]:
+                del params_["to_run"]
+                _job_compute_speech_activations(**params_)
+    elif len(df_to_run):
+        print(f"{len(df_to_run)} jobs")
+
         name = "brainscore_embeddings"
         executor = AutoExecutor(
             f"submitit_jobs/submitit_jobs/{name}")
         executor.update_parameters(
-            slurm_partition="learnfair",
+            slurm_partition=slurm_partition,
             slurm_array_parallelism=100,
             timeout_min=60 * 72,
             # cpus_per_tasks=3,
             name=name,
             cpus_per_task=4,
-            gpus_per_node=1,
+            gpus_per_node=0,
         )
-        jobs = executor.map_array(_job_compute_activations,
-                                  [model_name_or_path]*len(to_run_files),
-                                  to_run_tasks,
-                                  to_run_files,
-                                  [model_max_len]*len(to_run_files))
+
+        keys = ["task", "feature_type", "output_file",
+                "hrf_model",  "out_sr", "window", "context"]
+
+        jobs = executor.map_array(
+            _job_compute_speech_activations, *
+            [df_to_run[k].values for k in keys])
 
         # Check jobs done
         completed = _wait_until_complete(
-            jobs, max_time_to_wait=50, wait_step=10*60, job_names=to_run_tasks)
+            jobs, max_time_to_wait=50, wait_step=10 * 60,
+            job_names=df_to_run.task.values)
         print(
             f"Done computing deep networks activations, \
                 {len(completed)}/{len(jobs)} jobs completed")
 
-    # Compute brain scores
+    # --------- Brain scores ---------
     output_dir = Path(output_path)
     output_dir.mkdir(exist_ok=True, parents=True)
     df_output_file = output_dir / "brain_scores_df.csv"
@@ -186,7 +209,7 @@ def run_eval(model_name_or_path,
                     to_rois=to_rois,
                     x_pca=x_pca,
                     to_run=overwrite or (not output_file.is_file()),
-                    model_name_or_path=str(model_name_or_path),
+                    feature_type=feature_type,
                 )
             )
 
@@ -199,7 +222,7 @@ def run_eval(model_name_or_path,
     print(f"{len(df_to_run)} jobs, {df_to_run.subject.nunique()} subjects")
     if local:
         for _, row in df_to_run.iterrows():
-            score = _job_compute_brain_score(*[row[k] for k in keys])
+            score = _job_compute_speech_brain_score(*[row[k] for k in keys])
             print(f"{score:.2f}")
 
     else:
@@ -207,7 +230,7 @@ def run_eval(model_name_or_path,
         executor = AutoExecutor(
             f"submitit_jobs/submitit_jobs/{name}")
         executor.update_parameters(
-            slurm_partition="learnfair",
+            slurm_partition=slurm_partition,
             slurm_array_parallelism=200,
             timeout_min=60,
             # cpus_per_tasks=3,
@@ -216,26 +239,27 @@ def run_eval(model_name_or_path,
             gpus_per_node=0,
         )
 
-        jobs = executor.map_array(_job_compute_brain_score,
+        jobs = executor.map_array(_job_compute_speech_brain_score,
                                   *[df_to_run[k].values for k in keys])
         # Check jobs done
         completed = _wait_until_complete(
-            jobs, max_time_to_wait=50, wait_step=10*60, job_names=df_to_run["subject"].values)
+            jobs, max_time_to_wait=50, wait_step=10 * 60,
+            job_names=df_to_run["subject"].values)
         print(
             f"""Done computing deep networks activations, \
                 {len(completed)}/{len(jobs)} jobs completed""")
 
     # Load average scores
-    df = pd.read_csv(df_output_file)
-    df["is_file"] = df["output_file"].apply(lambda x: Path(x).is_file())
-    df["avg_r"] = np.nan
-    tmp = df.query("is_file")
-    scores = tmp["output_file"].apply(lambda x: np.nanmean(np.load(x))).values
-    # scores = [np.nanmean(x) if x is not None else np.nan for x in scores]
-    df.loc[df["is_file"].index, "avg_r"] = scores
-    print(f"Averaged scores saved to {df_output_file}")
-    df.to_csv(df_output_file)
+    # df = pd.read_csv(df_output_file)
+    # df["is_file"] = df["output_file"].apply(lambda x: Path(x).is_file())
+    # df["avg_r"] = np.nan
+    # tmp = df.query("is_file")
+    # scores = tmp["output_file"].apply(lambda x: np.nanmean(np.load(x))).values
+    # # scores = [np.nanmean(x) if x is not None else np.nan for x in scores]
+    # df.loc[df.query("is_file").index, "avg_r"] = scores
+    # print(f"Averaged scores saved to {df_output_file}")
+    # df.to_csv(df_output_file)
 
-    if delete_cache_after_run:
-        shutil.rmtree(feature_dir)
-        Path(cache_path).rmdir()
+    # if delete_cache_after_run:
+    #     shutil.rmtree(feature_dir)
+    #     Path(cache_path).rmdir()
