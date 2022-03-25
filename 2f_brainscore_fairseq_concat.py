@@ -1,4 +1,9 @@
 
+"""
+Compute brainscores for a set of features
+input: paths.speech_embeddings / FEATURE_FOLDER / f"{TASK}_{FEATURE}.pth"
+output: paths.scores / OUTPUT_NAME / FEATURE / f"{SUBJECT}_{HEMI}.npy"
+"""
 import os
 from pathlib import Path
 
@@ -10,22 +15,12 @@ from brainscore import paths
 from brainscore.brain.data import get_task_df
 from brainscore.get_brain_score_speech import get_brain_score_speech
 
-# Submitit job
+# ------ TO CHANGE ------
 LOCAL = False
 OVERWRITE = False
 SLURM_PARTITION = "learnlab"
-OUTPUT_NAME = "fairseq/0319_vox_concat_layers_wconv"
-CONCAT_CONV_TRICK = True
-
-# fMRI
-AVERAGE_BOLD = False
-N_SUBJECTS = None
-HEMIS = ["L", "R"]
-TO_ROIS = False
-IGNORE_TASK = []
-
-# Features
-FEATURE_FOLDER = "fairseq_0318_st5_ct10"
+OUTPUT_NAME = "fairseq/vox_concat_st5_ct10"
+FEATURE_FOLDER = "fairseq_st5_ct10"
 types = ["tr"]
 scales = ["minmax"]
 model_labels = ['unsup_english',
@@ -37,11 +32,20 @@ model_labels = ['unsup_english',
                 'unsup_dutch',
                 'unsup_french']
 
-CONCATS = [True]
 FEATURES = [f"{model_label}_{feature_type}_{scale}"
             for model_label in model_labels
             for feature_type in types for scale in scales]
+
+# ------ FMRI param ------
+AVERAGE_BOLD = False
+N_SUBJECTS = None
+HEMIS = ["L", "R"]
+TO_ROIS = False
+IGNORE_TASK = []
+
+CONCATS = [True]
 LAYERS = None
+CONCAT_CONV_TRICK = True
 
 # Mapping
 X_PCA = None

@@ -6,24 +6,33 @@ Compatible with Hugginface models
 pip install -r requirements.txt
 ```
 
+# Generate fairseq embeddings
+
+Need a separate environment for fairseq
+
+modify `fairseq_models` in brainscore/paths
+run `0f_extract_fairseq_activations.py` with LOCAL=True (to test in local)
+This will save embeddings in `data/speech_embeddings/fairseq_st5_ct10/TASK_FEATURE.pth`
+
+# Run brain scores
+modify `base_dir` in brainscore/paths
+run `1f_brainscore_fairseq.py` with LOCAL=True (to test in local). 
+This will save brainscores in `scores/fairseq/fairseq_st5_ct10/FEATURE/sub_hemi.npy`
+
+To run for all layers:
 ```
-pip install -e
+`1f_brainscore_fairseq.py`
 ```
 
-## Run evaluation on the average subject
+To run for concatenated layers:
 ```
-from brainscore import run_eval
-model_name_or_path = "gpt2" # Huggingface model 
-local = True # If False, run on the cluster with submitit
-run_eval(model_name_or_path, average_bold=True)
+`2f_brainscore_fairseq_concat.py`
 ```
 
-## Run evaluation on single subjects
 
+To run for concatenated layers (hierarchically):
 ```
-from brainscore import run_eval
-model_name_or_path = "gpt2" # Huggingface model 
-n_subjects = 2
-local = True # If False, run on the cluster with submitit
-run_eval(model_name_or_path, n_subjects=n_subjects, average_bold=False)
+`3f_brainscore_fairseq_hierarch_concat.py`
 ```
+
+

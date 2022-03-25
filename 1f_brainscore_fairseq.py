@@ -1,4 +1,10 @@
 
+"""
+Compute brainscores for a set of features
+input: paths.speech_embeddings / FEATURE_FOLDER / f"{TASK}_{FEATURE}.pth"
+output: paths.scores / OUTPUT_NAME / FEATURE / f"{SUBJECT}_{HEMI}.npy"
+"""
+
 import os
 from pathlib import Path
 
@@ -10,21 +16,16 @@ from brainscore import paths
 from brainscore.brain.data import get_task_df
 from brainscore.get_brain_score_speech import get_brain_score_speech
 
-# Submitit job
+# ------ Job param ------
 LOCAL = False
-OVERWRITE = False
 SLURM_PARTITION = "learnlab"
-OUTPUT_NAME = "fairseq/0320_vox_st5_ct10"  # "fairseq/0315_vox"
 
-# fMRI
-AVERAGE_BOLD = False
-N_SUBJECTS = None
-HEMIS = ["L", "R"]
-TO_ROIS = False
-IGNORE_TASK = []  # ["slumlordreach", "21styear"]
+# ------ Output params ------
+OUTPUT_NAME = "fairseq/vox_st5_ct10" 
+OVERWRITE = False
 
-# Features
-FEATURE_FOLDER = "fairseq_0318_st5_ct10"  # "fairseq_0315"
+# ------ Inputs params (embeddings) ------
+FEATURE_FOLDER = "fairseq_st5_ct10"
 types = ["conv", "tr"]
 scales = ["minmax"]
 model_labels = ['unsup_english',
@@ -36,14 +37,21 @@ model_labels = ['unsup_english',
                 'unsup_dutch',
                 'unsup_french']
 
-CONCATS = [False]
+CONCATS = [False] # Whether to concat or not
 FEATURES = [f"{model_label}_{feature_type}_{scale}"
             for model_label in model_labels
             for feature_type in types for scale in scales]
-LAYERS = None
 
-# Mapping
-X_PCA = None
+# ------ FMRI param ------
+AVERAGE_BOLD = False
+N_SUBJECTS = None
+HEMIS = ["L", "R"]
+TO_ROIS = False
+IGNORE_TASK = []  # ["slumlordreach", "21styear"] # Whether to ignore some tasks
+
+
+LAYERS = None # Run for all layers
+X_PCA = None # Without PCA
 
 
 def _job_compute_speech_brain_score(subject, feature_files, output_file,

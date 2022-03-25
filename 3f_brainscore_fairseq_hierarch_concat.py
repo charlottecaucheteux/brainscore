@@ -14,7 +14,7 @@ from brainscore.get_brain_score_speech import get_brain_score_speech
 LOCAL = False
 OVERWRITE = False
 SLURM_PARTITION = "learnlab"
-OUTPUT_NAME = "fairseq/0322_vox_hierarch_concat_layers_wconv_st5_ct10"
+OUTPUT_NAME = "fairseq/vox_hierarch_concat_st5_ct10"
 
 # fMRI
 AVERAGE_BOLD = False
@@ -26,7 +26,7 @@ CONCAT_CONV_TRICK = True
 HIERARCH_CONCAT = True
 
 # Features
-FEATURE_FOLDER = "fairseq_0318_st5_ct10"
+FEATURE_FOLDER = "fairseq_st5_ct10"
 types = ["tr"]
 scales = ["minmax"]
 model_labels = ['unsup_english',

@@ -1,3 +1,9 @@
+"""
+Generate and save fairseq embeddings for Narratives audio files
+input: paths.fairseq_models / checkpoint_unsup_english.pt
+output: paths.speech_embeddings / FEATURE_FOLDER / TASK_FEATURE.pth
+"""
+
 from pathlib import Path
 
 import pandas as pd
@@ -8,19 +14,15 @@ from brainscore import paths
 from brainscore.brain.data import get_task_df
 from brainscore.deep_net.data_speech import get_speech_activations
 
-SELECTED_TASKS = []
-LOCAL = True
-FEATURE_FOLDER = "fairseq_0315"
-FEATURE_FOLDER = "fairseq_0318_st5_ct10"
-SLURM_PARTITION = "learnlab"
-DEVICE = "cuda"
-OVERWRITE = False
+# ------ Output param ------
+FEATURE_FOLDER = "fairseq_st5_ct10" # Embeddings will be saved to paths.speech_embeddings / FEATURE_FOLDER / task_feature.pth
+OVERWRITE = False # Whether to overwrite output files or not
 
-WINDOW = 5
-CONTEXT = 10
-
-FEATURE_TYPES = ["tr", "conv"]
-SCALE_TYPES = ["minmax"]
+# ------ Input param ------
+WINDOW = 5 # window size
+CONTEXT = 10 # context size
+FEATURE_TYPES = ["tr", "conv"] # Run for both tr and conv
+SCALE_TYPES = ["minmax"] # Run with minmax scaling
 MODEL_NAMES = ['checkpoint_unsup_english',
                'checkpoint_sup_english',
                'random_model',
@@ -29,10 +31,14 @@ MODEL_NAMES = ['checkpoint_unsup_english',
                'checkpoint_unsup_mandarin',
                'checkpoint_unsup_dutch',
                'checkpoint_unsup_french']
-
 SUPERVISED = [("_sup_" in k) or ("_finetuned_" in k) for k in MODEL_NAMES]
 assert len(SUPERVISED) == len(MODEL_NAMES)
+SELECTED_TASKS = [] # Run for all tasks. If SELECTED_TASKS = ["pieman"], run only for pieman.
 
+# ------ Job param ------
+LOCAL = True
+SLURM_PARTITION = "learnlab"
+DEVICE = "cuda"
 
 def _job_compute_speech_activations(model_name, task, feature_type, output_file,
                                     supervised=True,
