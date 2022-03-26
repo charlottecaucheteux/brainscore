@@ -84,7 +84,7 @@ def get_brain_score_speech(
 
         # --- Convert brain data to ROI
         if rois:
-            subj_data = bold_to_rois(subj_data, hemi=hemi)
+            subj_data = bold_to_rois(subj_data, hemi=hemi, space=space)
 
         # --- Load stimulus
         stimuli = get_stimulus(task)  # [T, V]

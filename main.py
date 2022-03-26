@@ -8,8 +8,6 @@ from brainscore.brain.data import get_task_df
 from brainscore.deep_net.data_speech import get_speech_activations
 from brainscore.get_brain_score_speech import get_brain_score_speech
 
-SELECT_TASKS = ["pieman"]
-
 
 def _job_compute_speech_activations(task, output_file, feature_type="tr",
                                     hrf_model="glover",
@@ -73,6 +71,8 @@ def _job_compute_speech_brain_score(feature_files,
 
 
 if __name__ == "__main__":
+
+    SELECT_TASKS = ["pieman"]
 
     # ---- Select audio tasks -----
     if len(SELECT_TASKS):
