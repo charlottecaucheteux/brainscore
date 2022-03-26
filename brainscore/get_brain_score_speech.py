@@ -26,7 +26,6 @@ def get_brain_score_speech(
     rois=False,  # compute scores on rois
     hemi="L",
     space="fsaverage6",
-    TR=1.5,
     y_pca=0,  # apply PCA on brain data
     select_tasks=None,  # wehther to run on a subset of audio tasks
     # Model

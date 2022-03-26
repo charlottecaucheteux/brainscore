@@ -33,9 +33,10 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
         context=context,  # context size
         pretrained=pretrained,  # whether to start from scratch or use pretrained
         device=device,  # "cuda" if use_cuda else "cpu",
-        TR=1.5,
-        extra_scans=10,
-        hrf_model="glover",
+        # Preprocessing params
+        TR=1.5, # HRF
+        extra_scans=10, # HRF
+        hrf_model="glover", # HRF
         scale="minmax",
     )
     print(f"Saving activations of shape {activations.shape} to {output_file}")
@@ -52,20 +53,17 @@ def _job_compute_speech_brain_score(feature_files,
         feature_files,
         subject=subject,
         # X
-        layers=layers,
-        x_pca=x_pca,
+        layers=layers, # selected embedding layers
         concat_layers=False,  # whether to concatenate layers of run for each layer
+        x_pca=x_pca, # whether to apply pca on embeddings
         # Y
-        rois=to_rois,
+        rois=to_rois, # whether to compute scores on brain ROIS
         hemi=hemi,
-        space="fsaverage6",
-        TR=1.5,
         y_pca=0,
-        select_tasks=select_tasks,
+        select_tasks=select_tasks, # None or subselected selected audio tasks
         # Model
-        n_folds=20 if subject == "avg" else 5,
-        n_jobs=10,
         metric="correlate",
+        n_folds=20 if subject == "avg" else 5,
         average_folds=(subject != "avg"),
     )
     print(f"Saving score to {output_file}")
