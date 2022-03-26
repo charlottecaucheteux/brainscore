@@ -30,7 +30,7 @@ def get_brain_score_speech(
     y_pca=0,  # apply PCA on brain data
     select_tasks=None,  # wehther to run on a subset of audio tasks
     # Model
-    fit_intercept=False,
+    fit_intercept=True,
     alpha_per_target=True,
     n_folds=5,
     n_jobs=10,
