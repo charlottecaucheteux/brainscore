@@ -21,7 +21,7 @@ LOCAL = False
 SLURM_PARTITION = "learnlab"
 
 # ------ Output params ------
-OUTPUT_NAME = "fairseq/vox_st5_ct10" 
+OUTPUT_NAME = "fairseq/vox_st5_ct10"
 OVERWRITE = False
 
 # ------ Inputs params (embeddings) ------
@@ -37,7 +37,7 @@ model_labels = ['unsup_english',
                 'unsup_dutch',
                 'unsup_french']
 
-CONCATS = [False] # Whether to concat or not
+CONCATS = [False]  # Whether to concat or not
 FEATURES = [f"{model_label}_{feature_type}_{scale}"
             for model_label in model_labels
             for feature_type in types for scale in scales]
@@ -50,8 +50,8 @@ TO_ROIS = False
 IGNORE_TASK = []  # ["slumlordreach", "21styear"] # Whether to ignore some tasks
 
 
-LAYERS = None # Run for all layers
-X_PCA = None # Without PCA
+LAYERS = None  # Run for all layers
+X_PCA = None  # Without PCA
 
 
 def _job_compute_speech_brain_score(subject, feature_files, output_file,
@@ -75,7 +75,7 @@ def _job_compute_speech_brain_score(subject, feature_files, output_file,
         n_delays=5,
         n_delays_start=0,
         # Model
-        fit_intercept=False,
+        fit_intercept=True,
         alpha_per_target=True,
         n_folds=20 if subject == "avg" else 5,
         n_jobs=10,
