@@ -32,7 +32,6 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
         window=window,  # stride
         context=context,  # context size
         pretrained=pretrained,  # whether to start from scratch or use pretrained
-        concat_layers=False,  # whether to concatenate layers of run for each layer
         device=device,  # "cuda" if use_cuda else "cpu",
         TR=1.5,
         extra_scans=10,
@@ -51,29 +50,23 @@ def _job_compute_speech_brain_score(feature_files,
                                     layers=None, to_rois=False, x_pca=0):
     score = get_brain_score_speech(
         feature_files,
-        audio=True,
         subject=subject,
-        layers=layers,
         # X
+        layers=layers,
         x_pca=x_pca,
+        concat_layers=False,  # whether to concatenate layers of run for each layer
         # Y
         rois=to_rois,
         hemi=hemi,
         space="fsaverage6",
         TR=1.5,
         y_pca=0,
-        # FIR
-        n_delays=5,
-        n_delays_start=0,
+        select_tasks=select_tasks,
         # Model
-        fit_intercept=False,
-        alpha_per_target=True,
         n_folds=20 if subject == "avg" else 5,
         n_jobs=10,
-        # Output
         metric="correlate",
         average_folds=(subject != "avg"),
-        select_tasks=select_tasks,
     )
     print(f"Saving score to {output_file}")
     Path(output_file).parent.mkdir(exist_ok=True, parents=True)
