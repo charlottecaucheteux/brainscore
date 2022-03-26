@@ -66,19 +66,14 @@ def _job_compute_speech_brain_score(subject, feature_files, output_file,
         rois=to_rois,
         hemi=hemi,
         space="fsaverage6",
-        TR=1.5,
         y_pca=0,
-        # FIR
-        n_delays=5,
-        n_delays_start=0,
         # Model
-        fit_intercept=False,
+        fit_intercept=True,
         alpha_per_target=True,
-        n_folds=20 if subject == "avg" else 5,
-        n_jobs=10,
+        n_folds=5,
         # Output
         metric="correlate",
-        average_folds=(subject != "avg"),
+        average_folds=True,
         concat_layers=concat_layers,
         concat_conv_trick=CONCAT_CONV_TRICK,
     )

@@ -61,10 +61,10 @@ def split_labels(
     return new_labels
 
 
-def get_rois(hemi="lh", max_vox=None):
+def get_rois(hemi="lh", max_vox=None, space="fsaverage6"):
     subjects_dir = paths.base_dir / "derivatives/freesurfer/"
     all_labels = mne.read_labels_from_annot(
-        "fsaverage6",
+        space,
         parc="aparc.a2009s",  # parc='Yeo2011_17Networks_N1000',
         subjects_dir=subjects_dir,
         verbose=False,
@@ -106,8 +106,8 @@ def to_vox(y, mapping_rois, nvox=40962):
     return x
 
 
-def bold_to_rois(vox_bold, hemi="L", max_vox=None):
+def bold_to_rois(vox_bold, hemi="L", max_vox=None, space="fsaverage6"):
     hemi = f"{hemi.lower()}h"
-    _, _, mapping_rois, _ = get_rois(hemi=hemi, max_vox=max_vox)
+    _, _, mapping_rois, _ = get_rois(hemi=hemi, max_vox=max_vox, space=space)
     roi_bold = to_rois(vox_bold, mapping_rois)
     return roi_bold
