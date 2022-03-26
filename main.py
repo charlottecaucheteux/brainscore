@@ -34,9 +34,9 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
         pretrained=pretrained,  # whether to start from scratch or use pretrained
         device=device,  # "cuda" if use_cuda else "cpu",
         # Preprocessing params
-        TR=1.5, # HRF
-        extra_scans=10, # HRF
-        hrf_model="glover", # HRF
+        TR=1.5,  # HRF
+        extra_scans=10,  # HRF
+        hrf_model="glover",  # HRF
         scale="minmax",
     )
     print(f"Saving activations of shape {activations.shape} to {output_file}")
@@ -53,14 +53,14 @@ def _job_compute_speech_brain_score(feature_files,
         feature_files,
         subject=subject,
         # X
-        layers=layers, # selected embedding layers
+        layers=layers,  # selected embedding layers
         concat_layers=False,  # whether to concatenate layers of run for each layer
-        x_pca=x_pca, # whether to apply pca on embeddings
+        x_pca=x_pca,  # whether to apply pca on embeddings
         # Y
-        rois=to_rois, # whether to compute scores on brain ROIS
+        rois=to_rois,  # whether to compute scores on brain ROIS
         hemi=hemi,
         y_pca=0,
-        select_tasks=select_tasks, # None or subselected selected audio tasks
+        select_tasks=select_tasks,  # None or subselected selected audio tasks
         # Model
         metric="correlate",
         n_folds=20 if subject == "avg" else 5,
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     assert Path(str(paths.mean_bolds) % "L").is_file(
     ), "Please update paths.mean_bold in brainscore/paths.py"
     output_file = paths.scores / "minimal" / "avg_L.npy"
-    score = _job_compute_speech_brain_score(embed_files, 
-    output_file,
-    layers = (0, 8),
-    to_rois=True,
-    subject="avg",
-                                            select_tasks=["pieman"])
+    score = _job_compute_speech_brain_score(embed_files,
+                                            output_file,
+                                            layers=(0, 8),
+                                            to_rois=True,
+                                            subject="avg",
+                                            select_tasks=tasks)
