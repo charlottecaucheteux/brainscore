@@ -92,9 +92,9 @@ if __name__ == "__main__":
         embed_files[task] = embed_file
 
     # ------ Compute brain scores for average subject (left hemi) ----
-    assert Path(str(paths.mean_bold) % "L").is_file(
+    assert Path(str(paths.mean_bolds) % "L").is_file(
     ), "Please update paths.mean_bold in brainscore/paths.py"
     output_file = paths.scores / "minimal" / "avg_L.npy"
-    score = _job_compute_speech_brain_score(feature_files, output_file,
+    score = _job_compute_speech_brain_score(embed_files, output_file,
                                             subject="avg",
                                             select_tasks=["pieman"])
