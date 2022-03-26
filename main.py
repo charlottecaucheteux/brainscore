@@ -95,6 +95,9 @@ if __name__ == "__main__":
     assert Path(str(paths.mean_bolds) % "L").is_file(
     ), "Please update paths.mean_bold in brainscore/paths.py"
     output_file = paths.scores / "minimal" / "avg_L.npy"
-    score = _job_compute_speech_brain_score(embed_files, output_file,
-                                            subject="avg",
+    score = _job_compute_speech_brain_score(embed_files, 
+    output_file,
+    layers = (0, 8),
+    to_rois=True,
+    subject="avg",
                                             select_tasks=["pieman"])
