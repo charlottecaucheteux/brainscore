@@ -17,9 +17,12 @@ def _job_compute_speech_activations(task, output_file, feature_type="tr",
                                     pretrained=True,
                                     model_name="wav2vec2-base-960h",
                                     device="cpu",
+                                    overwrite=False,
                                     ):
     # With time window
     print(f"Computing the activations of Wav2Vec to {output_file}")
+    if output_file.exists() and not overwrite:
+        return
     # use_cuda = torch.cuda.is_available()
     wav_file = paths.stimuli / f"{task}_audio.wav"
     assert wav_file.is_file(), f"{wav_file} does not exist !!"
@@ -90,8 +93,6 @@ if __name__ == "__main__":
         embed_files[task] = embed_file
 
     # ------ Compute brain scores for average subject (left hemi) ----
-    assert Path(str(paths.mean_bolds) % "L").is_file(
-    ), "Please update paths.mean_bold in brainscore/paths.py"
     output_file = paths.scores / "minimal" / "avg_L.npy"
     score = _job_compute_speech_brain_score(embed_files,
                                             output_file,
