@@ -553,11 +553,10 @@ def compute_mean_bold(hemi, df_task, space="fsaverage6"):
 
 def get_mean_bold(hemi='L'):
     bold_file = str(paths.mean_bolds) % hemi
-    if Path(bold_file).is_file():
-        return np.load(bold_file, allow_pickle=True).item()
-    else:
+    if not Path(bold_file).is_file():
         print(f"Computing mean bolds to {bold_file}....")
         df_task = get_task_df()
         bold = compute_mean_bold(hemi, df_task)
-        np.save(bold_file, bold)
         print(f"Saved mean bolds to {bold_file}....")
+        np.save(bold_file, bold)
+    return np.load(bold_file, allow_pickle=True).item()
