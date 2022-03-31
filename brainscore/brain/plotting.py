@@ -1,3 +1,7 @@
+from .. import paths as PATHS
+import numpy as np
+
+
 def plot_brain_map_stats(
     r,
     title="",
@@ -14,7 +18,7 @@ def plot_brain_map_stats(
     if vmax is None:
         vmax = np.nanmax(r[np.isfinite(r)])
     plotting.plot_surf_stat_map(
-        surf_mesh=str(paths.surf_dir / f"{hemis[h]}.inflated"),
+        surf_mesh=str(PATHS.surf_dir / f"{hemis[h]}.inflated"),
         stat_map=r,
         hemi=hemi,
         # axes=ax,
@@ -24,7 +28,7 @@ def plot_brain_map_stats(
         cmap=cmap,
         symmetric_cbar=symmetric_cbar,
         threshold=thresh,
-        bg_map=str(paths.surf_dir / f"{hemis[h]}.sulc"),
+        bg_map=str(PATHS.surf_dir / f"{hemis[h]}.sulc"),
         colorbar=True,
         title=title,
     )

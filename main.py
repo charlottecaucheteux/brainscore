@@ -76,6 +76,7 @@ def _job_compute_speech_brain_score(feature_files,
 if __name__ == "__main__":
 
     SELECT_TASKS = ["pieman"]
+    SELECT_TASKS = []
 
     # ---- Select audio tasks -----
     if len(SELECT_TASKS):
@@ -86,10 +87,12 @@ if __name__ == "__main__":
     # ---- Compute embeddings for each task ----
     embed_files = {}
     for task in tasks:
-        embed_file = paths.speech_embeddings / "minimal" / f"{task}_tr.pth"
+        feature_type = 'conv'
+        embed_file = paths.speech_embeddings / \
+            "minimal" / f"{task}_{feature_type}.pth"
         embed_file.parent.mkdir(exist_ok=True, parents=True)
         _job_compute_speech_activations(
-            task, embed_file, feature_type="tr")  # either "tr" or "conv"
+            task, embed_file, feature_type=feature_type)  # either "tr" or "conv"
         embed_files[task] = embed_file
 
     # ------ Compute brain scores for average subject (left hemi) ----
