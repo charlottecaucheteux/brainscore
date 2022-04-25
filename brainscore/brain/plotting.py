@@ -1,3 +1,8 @@
+import numpy as np
+
+from .. import paths
+
+
 def plot_brain_map_stats(
     r,
     title="",
@@ -8,7 +13,9 @@ def plot_brain_map_stats(
     vmax=None,
     symmetric_cbar=True,
 ):
+
     from nilearn import plotting
+
     hemis = ["lh", "rh"]
     hemi = "left" if (h == 0) else "right"
     if vmax is None:
