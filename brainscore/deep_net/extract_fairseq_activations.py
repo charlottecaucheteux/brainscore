@@ -25,7 +25,8 @@ def forward_for_conv_encoder(conv_encoder, x, nb=10000):
 
 
 def forward_for_model_wav2vec2(
-    model, source, padding_mask=None, mask=True, features_only="z"
+    model, source, padding_mask=None, mask=True, features_only="z",
+    mask_indices=None,
 ):
     """This is a copy of the wav2vec2 forward function, modified to output feature ate different level
     model: the wav2vec2 model
@@ -91,7 +92,8 @@ def forward_for_model_wav2vec2(
         features = model.project_inp(features)
 
     if mask:
-        x, mask_indices = model.apply_mask(features, padding_mask)
+        x, mask_indices = model.apply_mask(
+            features, padding_mask, mask_indices=mask_indices)
         if mask_indices is not None:
             y = unmasked_features[mask_indices].view(
                 unmasked_features.size(0), -1, unmasked_features.size(-1)
@@ -208,35 +210,42 @@ class PretrainedWav2Vec2Model(nn.Module):
         else:
             self.model = model
 
-    def forward(self, x, feat_only):
+    def forward(self, x, feat_only, mask_indices=None, return_all=False):
         with torch.no_grad():
             # print('in model', x.shape)
             if not self.asr:
                 z = forward_for_model_wav2vec2(
-                    self.model, x, mask=False, features_only=feat_only
+                    self.model, x, mask=False, features_only=feat_only,
+                    mask_indices=mask_indices,
+
                 )
             else:
                 if feat_only != "c":
                     z = forward_for_model_wav2vec2(
-                        self.model, x, mask=False, features_only=feat_only
+                        self.model, x, mask=False, features_only=feat_only,
+                        mask_indices=mask_indices,
                     )
                 else:
                     # we use the whole original function
-                    z = self.model_enc_all.forward(x, padding_mask=None)
+                    z = self.model_enc_all.forward(
+                        x, padding_mask=None, mask_indices=mask_indices)
                     z["x"] = z["encoder_out"]
+            if return_all:
+                return z
         return z["x"]
 
 
 class Prediction:
     """Lightweight wrapper around a fairspeech embedding model"""
 
-    def __init__(self, folder, fname, gpu=0, asr=False):
+    def __init__(self, folder, fname, gpu=0, asr=False, device="cpu"):
         print("initialising")
         self.gpu = gpu
-        self.model = PretrainedWav2Vec2Model(folder, fname, asr=asr).cuda(gpu)
+        self.model = PretrainedWav2Vec2Model(folder, fname, asr=asr).to(device)
+        self.device = device
 
     def __call__(self, x, feat_only):
-        x = torch.from_numpy(x).float().cuda(self.gpu)
+        x = torch.from_numpy(x).float().to(self.device)
         with torch.no_grad():
             # print('x shape', x.shape)
             # print('x uns', x.unsqueeze(0).shape)
@@ -254,13 +263,15 @@ class EmbeddingDatasetWriter(object):
         gpu=0,
         verbose=False,
         asr=False,  # True if you used a fine tuned model
+        device="cpu",
     ):
         assert (Path(model_folder) / model_fname).is_file()
 
         self.model_fname = model_fname
         self.model_folder = model_folder
         self.model = Prediction(
-            self.model_folder, self.model_fname, asr=asr, gpu=gpu)
+            self.model_folder, self.model_fname, asr=asr, gpu=gpu,
+            device=device)
         self.verbose = verbose
 
     def _progress(self, iterable, **kwargs):
@@ -416,6 +427,7 @@ def extract_fairseq_activations(
         model_folder=Path(model_name_or_path).parent,  # folder to checkpoint
         model_fname=model_name_or_path,  # path to the checkpoint
         gpu=0,  # do not change this
+        device=device,
         # True if you are using a fine tuned model or a supervised model, False otherwise
         asr=supervised,
     )

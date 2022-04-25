@@ -13,15 +13,21 @@ def get_activations(
     max_len=1024,
     col="word_raw",
     device="cpu",
+    bidir=False,  # whether to include future context
 ):
     stimulus["word_index"] = np.arange(len(stimulus))
+
+    if bidir:
+        future_context = max_len//2
+    else:
+        future_context = 0
 
     # Align sequences with fixed context
     sequences = []
     for i, row in stimulus.iterrows():
         wp = row.word_index
         # put current word at the end
-        words = np.roll(stimulus[col].values, -(wp + 1))
+        words = np.roll(stimulus[col].values, -(wp + 1 + future_context))
         fwd = " ".join(words)
         sequences.append(fwd)
     assert len(sequences) == len(stimulus)
@@ -48,7 +54,7 @@ def get_activations(
             out = torch.stack(out.hidden_states)
             if fix_embeddings:
                 out[0] = model.base_model.wte.forward(inpt)[None]
-            out = out[:, 0, -1]
+            out = out[:, 0, -(1+future_context)]
             out = out.cpu()
             outputs.append(out)
     outputs = torch.stack(outputs, dim=1)

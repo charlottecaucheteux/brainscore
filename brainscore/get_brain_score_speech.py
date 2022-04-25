@@ -48,6 +48,7 @@ def get_brain_score_speech(
     concat_layers=False,
     concat_conv_trick=False,
     hierarch_concat=False,
+    apply_log=False,
 ):
     corr_function = get_metric(metric)
 
@@ -101,7 +102,10 @@ def get_brain_score_speech(
         # Extract features from stimulus
         f = Path(feature_files[task])
         assert f.is_file(), f"{f} does not exists"
-        feat = torch.load(f).numpy()
+        feat = torch.load(f)
+        if apply_log:
+            feat = torch.log(feat)
+        feat = feat.numpy()
         n_scans = min(len(subj_data), feat.shape[1])
         if concat_conv_trick:
             assert audio

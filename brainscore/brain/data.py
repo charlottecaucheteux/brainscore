@@ -154,8 +154,9 @@ def get_checked_tasks():
     """
     if paths.checked_gentle_path.exists():
         tasks = [
-            p.parent.name for p in list(Path(paths.checked_gentle_path).glob("*/align.csv"))
-        ]
+            p.parent.name
+            for p in list(
+                Path(paths.checked_gentle_path).glob("*/align.csv"))]
         tasks = {k: {} for k in tasks}
 
         for key in tasks.keys():
@@ -261,7 +262,8 @@ def replace_special_character_chains(text):
 
 def gentle_tokenizer(raw_sentence):
     seq = []
-    for m in re.finditer(constants.REGEX_GENTLE_TOKENIZER, raw_sentence, re.UNICODE):
+    for m in re.finditer(
+            constants.REGEX_GENTLE_TOKENIZER, raw_sentence, re.UNICODE):
         start, end = m.span()
         word = m.group()
         seq.append((word, start, end))
@@ -420,9 +422,8 @@ def add_pulses_to_stim(stimuli, n_pulse, TR=1.5, reset_onset=False):
     events = pd.concat([events, pulses], axis=0).sort_values(
         ["onset", "offset"])
     events["volume"] = events["volume"].fillna(method="ffill").astype(int)
-    events["volume_delay"] = events.groupby("volume").cumcount() / events.groupby(
-        "volume"
-    )["volume"].transform("count")
+    events["volume_delay"] = events.groupby("volume").cumcount(
+    ) / events.groupby("volume")["volume"].transform("count")
     events["volume"] += events["volume_delay"]
     return events
 
@@ -529,8 +530,8 @@ def compute_mean_bold(hemi, df_task, space="fsaverage6"):
         gii_fname += f"-{space}_hemi-{hemi}_desc-clean.func.gii"
         try:
             subj_data = get_bold(
-                gii_fname, row.subject, exclude=True, afni_dir=paths.afni_dir_nosmooth
-            )
+                gii_fname, row.subject, exclude=True,
+                afni_dir=paths.afni_dir_nosmooth)
         except AssertionError as e:
             print("Assertion error", e)
             continue
@@ -557,7 +558,9 @@ def get_mean_bold(hemi='L'):
         return np.load(bold_file, allow_pickle=True).item()
     else:
         print(f"Computing mean bolds to {bold_file}....")
+        Path(bold_file).parent.mkdir(exist_ok=True, parents=True)
         df_task = get_task_df()
         bold = compute_mean_bold(hemi, df_task)
         np.save(bold_file, bold)
         print(f"Saved mean bolds to {bold_file}....")
+        return bold

@@ -20,11 +20,11 @@ def get_brain_score(
     feature_files,
     subject="avg",
     layers=None,
-    # Exp type
-    singlesub=True,
     # X
     x_pca=0,
+    concat_layers=False,
     # Y
+    select_tasks=None,
     rois=False,
     hemi="L",
     space="fsaverage6",
@@ -44,6 +44,8 @@ def get_brain_score(
     average_folds=True,
 ):
     corr_function = get_metric(metric)
+    if select_tasks is None:
+        select_tasks = get_task_df().audio_task.unique()
 
     if subject == "avg":
         singlesub = False
@@ -52,10 +54,12 @@ def get_brain_score(
         mean_bold = get_mean_bold(hemi=hemi)
         params = list(mean_bold.keys())
         print("Done")
+        params = [k for k in params if k in select_tasks]
     else:
         singlesub = True
         df_task = get_task_df()
-        df_task = df_task.query("subject==@subject")
+        df_task = df_task.query(
+            "subject==@subject and audio_task in @select_tasks")
         assert len(df_task), f"Subject {subject} does not exists"
         params = zip(df_task.audio_task, df_task.bold_task,
                      df_task.subject, df_task.onset)
@@ -107,6 +111,9 @@ def get_brain_score(
                 n_TR=len(subj_data),
                 TR=TR,
                 merge_func="sum")
+        if concat_layers:
+            print("Concatenating layers")
+            fir_feat = np.concatenate(list(fir_feat), axis=-1)[None]
         features.append(fir_feat)
         # except Exception as e:
         #     print(f"ERROR for task {params_}, {e}")

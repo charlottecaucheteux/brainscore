@@ -8,7 +8,8 @@ from .brain.data import get_stimulus, get_task_df
 from .deep_net.data import get_activations
 
 
-def compute_embeddings(model_file, task, output_file, max_len=1024):
+def compute_embeddings(
+        model_file, task, output_file, max_len=1024, bidir=False):
     # With time window
     print(f"Computing the activations of {model_file} for task {task}")
     use_cuda = torch.cuda.is_available()
@@ -16,7 +17,9 @@ def compute_embeddings(model_file, task, output_file, max_len=1024):
     activations = get_activations(stimulus,
                                   model_name_or_path=model_file,
                                   max_len=max_len,
-                                  device="cuda" if use_cuda else "cpu")
+                                  bidir=bidir,
+                                  device="cuda" if use_cuda else "cpu",
+                                  )
     print(f"Savving activations of shape {activations.shape} to {output_file}")
     torch.save(activations, output_file)
     return True
@@ -30,6 +33,7 @@ def run_generate_embeddings(
         slurm_array_parallelism=200,
         local=True,
         model_max_len=1024,
+        bidir=False,
         overwrite=False, device="cpu", select_tasks=None,):
     """
     TODO: cache instead of folder
@@ -55,6 +59,7 @@ def run_generate_embeddings(
                 task=task,
                 output_file=str(feature_file),
                 max_len=model_max_len,
+                bidir=bidir,
                 to_run=overwrite or (not feature_file.is_file()),
             )
         )
@@ -87,7 +92,7 @@ def run_generate_embeddings(
             gpus_per_node=1 if device == "cuda" else 0,
         )
 
-        keys = ["model_file", "task", "output_file", "max_len"]
+        keys = ["model_file", "task", "output_file", "max_len", "bidir"]
 
         jobs = executor.map_array(
             compute_embeddings, *[df_to_run[k].values for k in keys])

@@ -27,7 +27,9 @@ def mapping(
     apply_fir=True,
     # X
     x_pca=0,
+    x_pca_split=0,
     return_coef=False,
+    groups=None,
 ):
 
     def clone_list(x):
@@ -42,6 +44,27 @@ def mapping(
     if x_pca:
         pca_steps = [("pca_scaler", StandardScaler()), ("pca", PCA(x_pca))]
         steps.append(("pca", Pipeline(clone_list(pca_steps))))
+
+    if x_pca_split:
+        assert (groups is not None) and len(groups)
+        pca_steps = [
+            ("pca_scaler", StandardScaler()),
+            ("pca", PCA(x_pca_split))]
+        steps.append(
+            (
+                "pca",
+                ColumnTransformer(
+                    [
+                        (
+                            "present",
+                            Pipeline(clone_list(pca_steps)),
+                            np.where(groups == 0)[0],
+                        )
+                    ],
+                    remainder=Pipeline(clone_list(pca_steps)),
+                ),
+            )
+        )
 
     if apply_fir:
         steps.append(("fir", FIRTransformer(n_delays, start=n_delays_start)))
@@ -60,7 +83,8 @@ def mapping(
 
     if return_coef:
         print("Returning coefficients")
-        xdim = (x_pca if x_pca else X.shape[1])
+        xdim = len(np.unique(
+            groups)) * x_pca_split if x_pca_split else x_pca if x_pca else X.shape[1]
         R = np.zeros((Y.shape[-1], xdim * n_delays, n_folds))
     else:
         R = np.zeros((Y.shape[-1], n_folds))
@@ -78,8 +102,8 @@ def mapping(
             R[:, :, i] = pipe["ridge"].coef_
         else:
             R[:, i] = corr_function(Y[test], Y_pred)
-    
+
     if average_folds:
         R = np.nanmean(R, -1)
-        
+
     return R

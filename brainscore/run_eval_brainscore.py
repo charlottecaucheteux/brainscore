@@ -10,7 +10,7 @@ from .get_brain_score import get_brain_score
 
 # STOP HERE UNTIL FINISH
 def compute_brainscore(subject, feature_files, output_file,
-                       layers=[8], to_rois=True, x_pca=0):
+                       layers=[8], to_rois=True, x_pca=0, concat_layers=False):
     score = get_brain_score(
         feature_files,
         subject=subject,
@@ -27,13 +27,15 @@ def compute_brainscore(subject, feature_files, output_file,
         n_delays=5,
         n_delays_start=0,
         # Model
-        fit_intercept=False,
+        fit_intercept=True,
         alpha_per_target=True,
         n_folds=20 if subject == "avg" else 5,
         n_jobs=10,
         # Output
         metric="correlate",
         average_folds=(subject != "avg"),
+        concat_layers=concat_layers,
+        select_tasks=list(feature_files.keys()),
     )
     print(f"Saving score to {output_file}")
     Path(output_file).parent.mkdir(exist_ok=True, parents=True)
@@ -55,6 +57,7 @@ def run_eval_brainscore(feature_files,
                         local=True,
                         overwrite=False,
                         feature_name=None,
+                        concat_layers=False,
                         ):
     """
     feature_files is a dictionnary with {task: embedding_file} with embedding_file
@@ -95,6 +98,7 @@ def run_eval_brainscore(feature_files,
                     x_pca=x_pca,
                     feature_name=feature_name,
                     to_run=overwrite or (not output_file.is_file()),
+                    concat_layers=concat_layers,
                 )
             )
 
@@ -102,7 +106,7 @@ def run_eval_brainscore(feature_files,
     df.to_csv(df_output_file)
     df_to_run = df.query("to_run")
     keys = ["subject", "feature_files",
-            "output_file", "layers", "to_rois", "x_pca"]
+            "output_file", "layers", "to_rois", "x_pca", "concat_layers"]
 
     print(f"{len(df_to_run)} jobs, {df_to_run.subject.nunique()} subjects")
     if local:
