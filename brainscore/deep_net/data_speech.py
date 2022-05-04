@@ -8,6 +8,10 @@ import torch.nn.functional as F
 from nistats import hemodynamic_models
 from tqdm import tqdm, trange
 
+from .fairseq_to_hugg import (get_config_fairseq_to_hf,
+                              get_model_weights_fromFairSeq,
+                              verify_wav2vec2_weights_HFandFairSeq)
+
 #from .. import paths
 
 VALID_N_CONDS = {
@@ -178,6 +182,7 @@ def get_speech_activations(
     pretrained=True,
     supervised=False,
     fairseq=False,
+    fairseq_to_hugg=False,
     loss=False,
 ):
     """
@@ -192,7 +197,32 @@ def get_speech_activations(
     """
     assert feature_type in ["tr", "conv"]
 
-    if fairseq:
+    if loss:
+        from transformers import (Wav2Vec2ForCTC, Wav2Vec2ForPreTraining,
+                                  Wav2Vec2Processor)
+
+        # assert model_name_or_path == "facebook/wav2vec2-base"
+        hugg_mode_name = "facebook/wav2vec2-base"
+        processor = Wav2Vec2Processor.from_pretrained(hugg_mode_name)
+        model = Wav2Vec2ForPreTraining.from_pretrained(
+            hugg_mode_name,
+            ctc_loss_reduction="mean",
+            pad_token_id=processor.tokenizer.pad_token_id,
+        )
+        model_sr = processor.feature_extractor.sampling_rate
+
+        if fairseq or fairseq_to_hugg:
+            import fairseq as fairseq_library
+            model_fs, _ = fairseq_library.checkpoint_utils.load_model_ensemble(
+                [str(model_name_or_path)])
+            model_fs = model_fs[0]
+            model_fs.load_state_dict(torch.load(model_name_or_path)["model"])
+
+            model = get_model_weights_fromFairSeq(model, model_fs)
+
+            verify_wav2vec2_weights_HFandFairSeq(model, model_fs)
+            model = get_config_fairseq_to_hf(model, model_fs)
+    elif fairseq:
         from .extract_fairseq_activations import EmbeddingDatasetWriter
 
         fname = Path(model_name_or_path)
@@ -205,17 +235,6 @@ def get_speech_activations(
             asr=supervised,
         )
         model_sr = 16000
-    elif loss:
-        from transformers import (Wav2Vec2ForCTC, Wav2Vec2ForPreTraining,
-                                  Wav2Vec2Processor)
-        assert model_name_or_path == "facebook/wav2vec2-base"
-        processor = Wav2Vec2Processor.from_pretrained(model_name_or_path)
-        model = Wav2Vec2ForPreTraining.from_pretrained(
-            model_name_or_path,
-            ctc_loss_reduction="mean",
-            pad_token_id=processor.tokenizer.pad_token_id,
-        )
-        model_sr = processor.feature_extractor.sampling_rate
 
     else:
         from transformers import AutoConfig, Wav2Vec2Model, Wav2Vec2Processor

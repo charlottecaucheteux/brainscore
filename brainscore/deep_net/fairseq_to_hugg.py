@@ -196,48 +196,48 @@ def get_config_fairseq_to_hf(modelHF, model):
         modelHF.wav2vec2.encoder.layers[i].dropout.p = model.encoder.layers[i].dropout1.p
         modelHF.wav2vec2.encoder.layers[i].feed_forward.intermediate_dropout.p = model.encoder.layers[i].dropout2.p
         modelHF.wav2vec2.encoder.layers[i].feed_forward.output_dropout.p = model.encoder.layers[i].dropout3.p
-    assert modelHF.config.hidden_act == model.args.activation_fn
+    assert modelHF.config.hidden_act == model.cfg.activation_fn
     # otherwise one has to reinstentiate the layers...
-    modelHF.config.hidden_dropout = model.args.dropout
+    modelHF.config.hidden_dropout = model.cfg.dropout
 
     modelHF.config.mask_time_selection = model.mask_selection
     modelHF.config.contrastive_logits_temperature = model.logit_temp
-    modelHF.config.do_stable_layer_norm = model.args.layer_norm_first
-    modelHF.config.feat_extract_activation = model.args.activation_fn
+    modelHF.config.do_stable_layer_norm = model.cfg.layer_norm_first
+    modelHF.config.feat_extract_activation = model.cfg.activation_fn
     # we found no equivalent of dropout_input
     # model.dropout_input
-    # model.args.dropout_input
+    # model.cfg.dropout_input
     modelHF.dropout_features.p = model.dropout_features.p
     # modelHF.dropout_features.p = model.dropout_features.p
 
     # not sure about that:
     modelHF.wav2vec2.feature_projection.dropout.p = model.dropout_features.p
-    modelHF.config.feat_proj_dropout = model.args.dropout_features
+    modelHF.config.feat_proj_dropout = model.cfg.dropout_features
 
     # layer drop
-    modelHF.config.layerdrop = model.args.encoder_layerdrop
+    modelHF.config.layerdrop = model.cfg.encoder_layerdrop
 
     # masking parameters:
-    modelHF.config.mask_channel_length = model.args.mask_channel_length
-    modelHF.config.mask_channel_min_space = model.args.mask_channel_min_space
-    modelHF.config.mask_channel_other = model.args.mask_channel_other
-    modelHF.config.mask_channel_prob = model.args.mask_channel_prob
-    modelHF.config.mask_channel_selection = model.args.mask_channel_selection
-    model.no_mask_channel_overlap = model.args.no_mask_channel_overlap
+    modelHF.config.mask_channel_length = model.cfg.mask_channel_length
+    modelHF.config.mask_channel_min_space = model.cfg.mask_channel_min_space
+    modelHF.config.mask_channel_other = model.cfg.mask_channel_other
+    modelHF.config.mask_channel_prob = model.cfg.mask_channel_prob
+    modelHF.config.mask_channel_selection = model.cfg.mask_channel_selection
+    model.no_mask_channel_overlap = model.cfg.no_mask_channel_overlap
 
-    modelHF.config.mask_time_prob = model.args.mask_prob
-    modelHF.config.mask_time_length = model.args.mask_length
-    modelHF.config.mask_time_min_space = model.args.mask_min_space
-    modelHF.config.mask_time_other = model.args.mask_other
-    modelHF.config.mask_time_selection = model.args.mask_selection
-    modelHF.config.no_mask_time_overlap = model.args.no_mask_overlap
+    modelHF.config.mask_time_prob = model.cfg.mask_prob
+    modelHF.config.mask_time_length = model.cfg.mask_length
+    modelHF.config.mask_time_min_space = model.cfg.mask_min_space
+    modelHF.config.mask_time_other = model.cfg.mask_other
+    modelHF.config.mask_time_selection = model.cfg.mask_selection
+    modelHF.config.no_mask_time_overlap = model.cfg.no_mask_overlap
 
-    modelHF.config.mask_feature_prob = model.args.mask_prob
-    modelHF.config.mask_feature_length = model.args.mask_length
-    modelHF.config.mask_feature_min_space = model.args.mask_min_space
-    modelHF.config.mask_feature_other = model.args.mask_other
-    modelHF.config.mask_feature_selection = model.args.mask_selection
-    modelHF.config.no_mask_feature_overlap = model.args.no_mask_overlap
+    modelHF.config.mask_feature_prob = model.cfg.mask_prob
+    modelHF.config.mask_feature_length = model.cfg.mask_length
+    modelHF.config.mask_feature_min_space = model.cfg.mask_min_space
+    modelHF.config.mask_feature_other = model.cfg.mask_other
+    modelHF.config.mask_feature_selection = model.cfg.mask_selection
+    modelHF.config.no_mask_feature_overlap = model.cfg.no_mask_overlap
 
     # remain to check:
 
