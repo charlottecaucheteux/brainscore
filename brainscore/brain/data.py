@@ -191,7 +191,7 @@ def get_checked_tasks():
         ]:
             tasks[key]["onset"] = 3
         for key in ["lucy"]:
-            tasks[key]["onset"] = 1  # not aligned with text
+            tasks[key]["onset"] = 2  # 1 in events.tsv, 2 in text
         for key in ["tunnel"]:
             tasks[key]["onset"] = 2
 
